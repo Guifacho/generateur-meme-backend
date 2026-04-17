@@ -1,98 +1,103 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🐢 Meme Generator API (Backend)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Ce projet est le backend d'une application de génération de mèmes. Il permet de gérer le stockage des images et des métadonnées associées (textes, positions, titres).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## 🚀 Technologies utilisées
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Framework :** [NestJS](https://nestjs.com) (Node.js)
+- **Base de données :** PostgreSQL
+- **ORM :** TypeORM
+- **Conteneurisation :** Docker & Docker Compose
+- **Gestion d'images :** Multer (Stockage local)
 
-## Project setup
+---
+
+## ⚙️ Installation et Lancement
+
+### 1. Prérequis
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop) installé et lancé.
+- [Git](https://git-scm.com) pour cloner le projet.
+
+### 2. Récupérer le projet
 
 ```bash
-$ npm install
+git clone https://github.com/Guifacho/generateur-meme-backend.git
+cd generateur-meme-backend
 ```
 
-## Compile and run the project
+### 3. Lancer l'infrastructure (Docker)
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker-compose up --build
 ```
 
-## Run tests
+> Le backend sera accessible sur : **http://localhost:3001**
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## 📄 Documentation de l'API
 
-# test coverage
-$ npm run test:cov
+### Points d'entrée (Endpoints)
+
+| Méthode  | Route               | Description                    | Format              |
+|----------|---------------------|--------------------------------|---------------------|
+| `POST`   | `/api/memes`        | Créer un mème (upload + data)  | `multipart/form-data` |
+| `GET`    | `/api/memes`        | Liste tous les mèmes           | JSON                |
+| `GET`    | `/api/memes/:id`    | Détails d'un mème spécifique   | JSON                |
+| `PUT`    | `/api/memes/:id`    | Modifier titre ou textes       | JSON                |
+| `DELETE` | `/api/memes/:id`    | Supprimer le mème et l'image   | JSON                |
+| `GET`    | `/uploads/:filename`| Visualiser l'image brute       | Fichier Statique    |
+
+---
+
+## 🔴 Architecture & Fonctionnement (Important pour le Front)
+
+Il est important de noter que le Backend **ne génère pas** une image finale avec le texte incrusté. Il sépare les **ressources** des **données**.
+
+### 1. Stockage des Images
+
+Les images sont stockées physiquement dans le dossier `/backend/uploads`. Pour afficher une image dans le Frontend, utilisez l'URL :
+
+```
+http://localhost:3001/uploads/{nom_du_fichier.png}
 ```
 
-## Deployment
+### 2. Base de données (PostgreSQL)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+La base de données ne contient que les **métadonnées**. Voici à quoi ressemble un enregistrement :
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- **`id`** : UUID unique.
+- **`title`** : Titre du mème.
+- **`image`** : Le nom du fichier stocké (ex: `171325...png`).
+- **`texts`** : Un tableau JSON contenant le texte et les coordonnées `x` et `y`.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+### 3. Rôle du Frontend
+
+Le Frontend est responsable de la **reconstitution**. Il doit :
+
+1. Récupérer l'image brute via la route `/uploads`.
+2. Superposer les textes aux coordonnées indiquées par les métadonnées `texts` (via Canvas ou CSS).
+
+---
+
+## 📁 Structure du Projet
+
+```
+/
+├── /src                  # Logique NestJS
+├── /backend/uploads      # Volume Docker pour le stockage persistant des images
+└── docker-compose.yml    # Configuration de l'orchestration de la base de données et de l'API
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+---
 
-## Resources
+## 🔒 CORS
 
-Check out a few resources that may come in handy when working with NestJS:
+Le backend autorise toutes les origines (`*`) par défaut en développement pour faciliter la communication avec le serveur de dev du Frontend (Vite, React, etc.).
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+*Développé avec NestJS et ❤️ pour le projet Meme Generator.*
