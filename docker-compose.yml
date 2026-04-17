@@ -1,0 +1,36 @@
+services:
+  # Base de données PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: meme-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: meme_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Backend NestJS
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meme-backend
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      # L'hôte est "db" car c'est le nom du service défini au-dessus
+      DATABASE_URL: "postgresql://user:password@db:5432/meme_db?schema=public"
+      PORT: 3000
+    volumes:
+      # Synchronisation du dossier uploads local avec le conteneur
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
